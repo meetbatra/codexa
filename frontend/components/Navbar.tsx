@@ -1,67 +1,62 @@
 "use client";
 
 import Link from "next/link";
+import { Badge } from "../components/ui/badge";
+import { Button } from "../components/ui/button";
+import { Skeleton } from "../components/ui/skeleton";
 import { useAuth } from "../context/AuthContext";
 
-const navLinkClass =
-  "rounded-md px-3 py-2 text-sm text-[var(--muted)] transition-colors hover:bg-[var(--surface)] hover:text-[var(--text)]";
+const navLinkClass = "text-muted-foreground hover:text-foreground";
 
 export default function Navbar() {
   const { user, logout, loading } = useAuth();
 
   return (
-    <nav className="sticky top-0 z-20 h-14 border-b border-[var(--border)] bg-[var(--bg)] px-6">
+    <nav className="sticky top-0 z-20 h-14 border-b border-border bg-background/95 px-6 backdrop-blur">
       <div className="mx-auto flex h-full max-w-7xl items-center justify-between">
-        <Link href="/" className="text-xl font-bold text-[var(--accent)]">
-          Codexa
-        </Link>
+        <Button asChild variant="link" className="h-auto p-0 text-xl font-bold text-[var(--accent)]">
+          <Link href="/">Codexa</Link>
+        </Button>
 
         {loading ? (
-          <div className="h-8 w-40 animate-pulse rounded-md bg-[var(--surface)]" />
+          <Skeleton className="h-8 w-40 bg-surface" />
         ) : user ? (
-          <div className="flex items-center gap-2">
-            <Link href="/problems" className={navLinkClass}>
-              Problems
-            </Link>
-            <Link href="/doubts" className={navLinkClass}>
-              Doubts
-            </Link>
+          <div className="flex items-center gap-1">
+            <Button asChild variant="ghost" size="sm" className={navLinkClass}>
+              <Link href="/problems">Problems</Link>
+            </Button>
+            <Button asChild variant="ghost" size="sm" className={navLinkClass}>
+              <Link href="/doubts">Doubts</Link>
+            </Button>
             {user.role === "TEACHER" && (
-              <Link href="/review" className={navLinkClass}>
-                Review Queue
-              </Link>
+              <Button asChild variant="ghost" size="sm" className={navLinkClass}>
+                <Link href="/review">Review Queue</Link>
+              </Button>
             )}
-            <span
-              className={`ml-2 rounded-full px-3 py-1 text-xs font-semibold ${
-                user.role === "TEACHER"
-                  ? "bg-[var(--accent)] text-white"
-                  : "bg-slate-700 text-slate-100"
-              }`}
+            <Badge
+              variant={user.role === "TEACHER" ? "default" : "secondary"}
+              className="ml-2"
             >
               {user.role}
-            </span>
-            <button
+            </Badge>
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
               onClick={logout}
-              className="ml-2 rounded-md border border-[var(--border)] px-3 py-2 text-sm text-[var(--muted)] transition-colors hover:border-[var(--error)] hover:text-white"
+              className="ml-2 text-muted-foreground hover:border-error hover:text-foreground"
             >
               Logout
-            </button>
+            </Button>
           </div>
         ) : (
-          <div className="flex items-center gap-2">
-            <Link
-              href="/login"
-              className="rounded-md px-3 py-2 text-sm text-[var(--muted)] transition-colors hover:text-white"
-            >
-              Login
-            </Link>
-            <Link
-              href="/signup"
-              className="rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-indigo-500"
-            >
-              Sign Up
-            </Link>
+          <div className="flex items-center gap-1">
+            <Button asChild variant="ghost" size="sm" className={navLinkClass}>
+              <Link href="/login">Login</Link>
+            </Button>
+            <Button asChild size="sm">
+              <Link href="/signup">Sign Up</Link>
+            </Button>
           </div>
         )}
       </div>

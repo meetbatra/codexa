@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, type ReactNode } from "react";
+import { Spinner } from "../components/ui/spinner";
 import { useAuth } from "../context/AuthContext";
 
 export default function ProtectedRoute({
@@ -22,7 +23,7 @@ export default function ProtectedRoute({
   if (loading) {
     return (
       <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center bg-[var(--bg)]">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--border)] border-t-[var(--accent)]" />
+        <Spinner className="size-8 text-[var(--accent)]" />
       </div>
     );
   }
