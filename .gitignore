@@ -12,6 +12,7 @@ coverage
 # Environment files
 .env
 .env.*
+!.env.example
 # Next.js and TypeScript artifacts
 next-env.d.ts
 *.tsbuildinfo
