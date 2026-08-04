@@ -14,7 +14,7 @@ router.patch(
   "/:doubtId/review",
   authenticateToken,
   requireTeacher,
-  sanitizeBody({ editedContent: 2000, teacherNote: 500 }),
+  sanitizeBody({ editedContent: 2000 }),
   reviewAnswer
 );
 router.get("/pending", authenticateToken, requireTeacher, getPendingAnswers);

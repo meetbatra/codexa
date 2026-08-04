@@ -95,8 +95,8 @@ function ProblemsContent() {
                       <td className="px-6 py-4 text-muted-foreground">{index + 1}</td>
                       <td className="px-6 py-4 font-medium text-foreground">{problem.title}</td>
                       <td className="px-6 py-4 text-right">
-                        <Button asChild size="sm">
-                          <Link href={`/problems/${problem.id}`}>Solve →</Link>
+                        <Button render={<Link href={`/problems/${problem.id}`} />} size="sm">
+                          Solve →
                         </Button>
                       </td>
                     </tr>

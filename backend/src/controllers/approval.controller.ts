@@ -29,7 +29,10 @@ function serializeAnswer(answer: {
 export async function submitForReview(req: Request, res: Response) {
   try {
     const answer = await prisma.doubtAnswer.findFirst({
-      where: { doubtId: doubtIdFromRequest(req) },
+      where: {
+        doubtId: doubtIdFromRequest(req),
+        doubt: { userId: req.user?.id },
+      },
     });
 
     if (!answer) {
@@ -64,7 +67,6 @@ export async function reviewAnswer(req: Request, res: Response) {
   try {
     const body = req.body as {
       action?: unknown;
-      teacherNote?: unknown;
       editedContent?: unknown;
     };
 
@@ -72,13 +74,6 @@ export async function reviewAnswer(req: Request, res: Response) {
       return res.status(400).json({
         success: false,
         error: "Action must be approve or reject",
-      } satisfies ApiResponse);
-    }
-
-    if (body.teacherNote !== undefined && typeof body.teacherNote !== "string") {
-      return res.status(400).json({
-        success: false,
-        error: "teacherNote must be a string",
       } satisfies ApiResponse);
     }
 
@@ -131,6 +126,13 @@ export async function reviewAnswer(req: Request, res: Response) {
 
 export async function getPendingAnswers(req: Request, res: Response) {
   try {
+    // Older AI answers were stored as DRAFT before the automatic review flow.
+    // Promote them so they are not stranded outside the teacher queue.
+    await prisma.doubtAnswer.updateMany({
+      where: { state: AnswerState.DRAFT },
+      data: { state: AnswerState.PENDING },
+    });
+
     const answers = await prisma.doubtAnswer.findMany({
       where: { state: AnswerState.PENDING },
       orderBy: { createdAt: "asc" },
@@ -159,7 +161,7 @@ export async function getPendingAnswers(req: Request, res: Response) {
         doubt: {
           id: answer.doubt.id,
           title: answer.doubt.title,
-          content: answer.doubt.body,
+          body: answer.doubt.body,
           createdAt: answer.doubt.createdAt,
         },
       })),
