@@ -3,6 +3,7 @@ import { Role, SubmissionStatus } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "../lib/prisma";
 import { runTestCases } from "../lib/judge0";
+import { generateCodeFeedback } from "../services/ai.service";
 import type { ApiResponse } from "../types";
 
 const submitSchema = z.object({
@@ -77,9 +78,26 @@ export async function submit(req: Request, res: Response) {
       include: { problem: { select: { title: true } } },
     });
 
-    const response = res.status(200).json({ success: true, data: updatedSubmission } satisfies ApiResponse);
+    const { aiFeedback: _aiFeedback, ...submissionResponse } = updatedSubmission;
+    const response = res.status(200).json({
+      success: true,
+      data: submissionResponse,
+    } satisfies ApiResponse);
     setImmediate(() => {
-      // Placeholder for asynchronous AI feedback generation.
+      void generateCodeFeedback(
+        submission.code,
+        submission.language,
+        updatedSubmission.status
+      )
+        .then((feedback) =>
+          prisma.submission.update({
+            where: { id: submission.id },
+            data: { aiFeedback: feedback },
+          })
+        )
+        .catch((error) => {
+          console.error("Failed to generate AI feedback:", error);
+        });
     });
     return response;
   } catch (error) {
