@@ -69,7 +69,6 @@ export async function getProblemById(req: Request, res: Response) {
       return res.status(404).json({ success: false, error: "Problem not found" } satisfies ApiResponse);
     }
 
-    const testCaseCount = Array.isArray(problem.testCases) ? problem.testCases.length : 0;
     return res.status(200).json({
       success: true,
       data: {
@@ -77,7 +76,7 @@ export async function getProblemById(req: Request, res: Response) {
         title: problem.title,
         description: problem.description,
         createdAt: problem.createdAt,
-        testCaseCount,
+        testCases: problem.testCases,
       },
     } satisfies ApiResponse);
   } catch (error) {
