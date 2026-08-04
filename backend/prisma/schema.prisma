@@ -1,13 +1,85 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
-generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
-}
-
 datasource db {
   provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  STUDENT
+  TEACHER
+}
+
+enum SubmissionStatus {
+  PENDING
+  ACCEPTED
+  WRONG_ANSWER
+  TIME_LIMIT_EXCEEDED
+  RUNTIME_ERROR
+  COMPILATION_ERROR
+}
+
+enum AnswerState {
+  DRAFT
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id          String        @id @default(uuid())
+  name        String
+  email       String        @unique
+  password    String
+  role        Role          @default(STUDENT)
+  createdAt   DateTime      @default(now())
+  submissions Submission[]
+  doubts      Doubt[]
+  reviews     DoubtAnswer[] @relation("ReviewedBy")
+}
+
+model Problem {
+  id          String       @id @default(uuid())
+  title       String
+  description String
+  testCases   Json
+  createdAt   DateTime     @default(now())
+  submissions Submission[]
+}
+
+model Submission {
+  id          String           @id @default(uuid())
+  userId      String
+  problemId   String
+  code        String
+  language    String
+  status      SubmissionStatus @default(PENDING)
+  testResults Json?
+  aiFeedback  String?
+  createdAt   DateTime         @default(now())
+  user        User             @relation(fields: [userId], references: [id])
+  problem     Problem          @relation(fields: [problemId], references: [id])
+}
+
+model Doubt {
+  id        String        @id @default(uuid())
+  userId    String
+  title     String
+  body      String
+  createdAt DateTime      @default(now())
+  user      User          @relation(fields: [userId], references: [id])
+  answers   DoubtAnswer[]
+}
+
+model DoubtAnswer {
+  id              String      @id @default(uuid())
+  doubtId         String
+  aiFeedbackDraft String
+  teacherEdit     String?
+  state           AnswerState @default(DRAFT)
+  reviewedById    String?
+  createdAt       DateTime    @default(now())
+  doubt           Doubt       @relation(fields: [doubtId], references: [id])
+  reviewedBy      User?       @relation("ReviewedBy", fields: [reviewedById], references: [id])
 }
