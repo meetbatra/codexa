@@ -1,28 +1,14 @@
 import { generateText } from "ai";
 import { openai } from "@ai-sdk/openai";
-
-const injectionPatterns = [
-  /ignore\s+(?:all\s+)?previous\s+instructions?/gi,
-  /disregard\s+(?:all\s+|the\s+)?(?:previous\s+)?instructions?/gi,
-  /system\s+prompt/gi,
-  /you\s+are\s+now/gi,
-  /jailbreak/gi,
-];
-
-function sanitize(value: string) {
-  return injectionPatterns.reduce(
-    (sanitized, pattern) => sanitized.replace(pattern, ""),
-    value
-  );
-}
+import { sanitizeInput } from "../utils/sanitize";
 
 export async function generateDoubtAnswer(
   title: string,
   content: string
 ): Promise<string> {
   try {
-    const sanitizedTitle = sanitize(title);
-    const sanitizedContent = sanitize(content).slice(0, 2000);
+    const sanitizedTitle = sanitizeInput(title, 200);
+    const sanitizedContent = sanitizeInput(content, 2000);
     const { text } = await generateText({
       model: openai("gpt-4o-mini"),
       system:
