@@ -117,7 +117,7 @@ export async function getDoubts(req: Request, res: Response) {
         createdAt: true,
         answers: {
           where: { state: AnswerState.APPROVED },
-          select: { id: true, aiFeedbackDraft: true, createdAt: true },
+          select: { id: true, aiFeedbackDraft: true, teacherEdit: true, createdAt: true },
         },
       },
     });

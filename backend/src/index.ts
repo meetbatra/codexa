@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import type { NextFunction, Request, Response } from "express";
 import authRoutes from "./routes/auth.routes";
+import approvalRouter from "./routes/approval.routes";
 import doubtRouter from "./routes/doubt.routes";
 import problemRoutes from "./routes/problem.routes";
 import submissionRoutes from "./routes/submission.routes";
@@ -24,6 +25,7 @@ app.get("/health", (_req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/doubts", approvalRouter);
 app.use("/api/doubts", doubtRouter);
 app.use("/api/submissions", submissionRoutes);
 app.use("/api/problems", problemRoutes);
