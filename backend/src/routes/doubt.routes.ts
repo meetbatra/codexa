@@ -5,10 +5,11 @@ import {
   postDoubt,
 } from "../controllers/doubt.controller";
 import { authenticateToken } from "../middleware/auth";
+import { sanitizeBody } from "../middleware/sanitize.middleware";
 
 const router = Router();
 
-router.post("/", authenticateToken, postDoubt);
+router.post("/", authenticateToken, sanitizeBody({ title: 200, content: 2000 }), postDoubt);
 router.get("/", authenticateToken, getDoubts);
 router.get("/mine", authenticateToken, getMyDoubts);
 

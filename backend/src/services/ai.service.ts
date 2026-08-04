@@ -1,22 +1,6 @@
 import { generateText } from "ai";
 import { openai } from "@ai-sdk/openai";
-
-const injectionPatterns = [
-  /ignore\s+(?:all\s+)?previous\s+instructions?/gi,
-  /disregard\s+(?:all\s+|the\s+)?(?:previous\s+)?instructions?/gi,
-  /system\s+prompt/gi,
-  /you\s+are\s+now/gi,
-  /jailbreak/gi,
-];
-
-function sanitizeCode(code: string) {
-  const sanitized = injectionPatterns.reduce(
-    (value, pattern) => value.replace(pattern, ""),
-    code
-  );
-
-  return sanitized.slice(0, 3000);
-}
+import { sanitizeInput } from "../utils/sanitize";
 
 export async function generateCodeFeedback(
   code: string,
@@ -24,7 +8,7 @@ export async function generateCodeFeedback(
   status: string
 ): Promise<string> {
   try {
-    const sanitizedCode = sanitizeCode(code);
+    const sanitizedCode = sanitizeInput(code, 3000);
     const { text } = await generateText({
       model: openai("gpt-4o-mini"),
       system:
