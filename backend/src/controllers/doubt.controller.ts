@@ -80,7 +80,7 @@ export async function postDoubt(req: Request, res: Response) {
             data: {
               doubtId: doubt.id,
               aiFeedbackDraft: answer,
-              state: AnswerState.DRAFT,
+              state: AnswerState.PENDING,
             },
           })
         )
@@ -150,11 +150,11 @@ export async function getMyDoubts(req: Request, res: Response) {
         userId: true,
         createdAt: true,
         answers: {
+          where: { state: AnswerState.APPROVED },
           select: {
             id: true,
             aiFeedbackDraft: true,
             teacherEdit: true,
-            state: true,
             createdAt: true,
           },
         },

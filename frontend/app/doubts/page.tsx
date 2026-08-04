@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import MarkdownContent from "../../components/MarkdownContent";
 import ProtectedRoute from "../../components/ProtectedRoute";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
@@ -11,12 +12,9 @@ import { Skeleton } from "../../components/ui/skeleton";
 import { Textarea } from "../../components/ui/textarea";
 import { apiFetch } from "../../lib/api";
 
-type AnswerState = "DRAFT" | "PENDING" | "APPROVED" | "REJECTED";
-
 type DoubtAnswer = {
   id: string;
   content: string;
-  state?: AnswerState;
   createdAt: string;
 };
 
@@ -53,7 +51,6 @@ function DoubtsBoard() {
   const [posting, setPosting] = useState(false);
   const [formMessage, setFormMessage] = useState("");
   const [formError, setFormError] = useState("");
-  const [submittingDoubtId, setSubmittingDoubtId] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -109,27 +106,12 @@ function DoubtsBoard() {
       setAllDoubts((items) => [normalizeDoubt(response.data), ...items]);
       setTitle("");
       setContent("");
-      setFormMessage("Doubt posted! AI is drafting an answer.");
+      setFormMessage("Doubt posted! AI is sending it for teacher review.");
       window.setTimeout(() => setFormMessage(""), 3000);
     } catch (err) {
       setFormError(err instanceof Error ? err.message : "Unable to post doubt");
     } finally {
       setPosting(false);
-    }
-  }
-
-  async function submitForReview(doubtId: string) {
-    setSubmittingDoubtId(doubtId);
-    setError("");
-    try {
-      await apiFetch(`/api/doubts/${doubtId}/submit`, { method: "PATCH" });
-      const response = (await apiFetch("/api/doubts/mine")) as DoubtsResponse;
-      setMyDoubts((response.data ?? []).map(normalizeDoubt));
-      setMyDoubtsLoaded(true);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unable to submit answer for review");
-    } finally {
-      setSubmittingDoubtId(null);
     }
   }
 
@@ -170,9 +152,7 @@ function DoubtsBoard() {
                 doubt={doubt}
                 expanded={expandedDoubtId === doubt.id}
                 mine={showMyDoubts}
-                submitting={submittingDoubtId === doubt.id}
                 onToggle={() => setExpandedDoubtId((current) => (current === doubt.id ? null : doubt.id))}
-                onSubmit={() => void submitForReview(doubt.id)}
               />
             ))}
           </div>
@@ -233,16 +213,12 @@ function DoubtCard({
   doubt,
   expanded,
   mine,
-  submitting,
   onToggle,
-  onSubmit,
 }: {
   doubt: Doubt;
   expanded: boolean;
   mine: boolean;
-  submitting: boolean;
   onToggle: () => void;
-  onSubmit: () => void;
 }) {
   const answers = doubt.answers ?? [];
 
@@ -271,8 +247,6 @@ function DoubtCard({
             <Answers
               answers={answers}
               mine={mine}
-              submitting={submitting}
-              onSubmit={onSubmit}
             />
           </div>
         )}
@@ -284,63 +258,33 @@ function DoubtCard({
 function Answers({
   answers,
   mine,
-  submitting,
-  onSubmit,
 }: {
   answers: DoubtAnswer[];
   mine: boolean;
-  submitting: boolean;
-  onSubmit: () => void;
 }) {
   if (!answers.length) {
-    return <p className="mt-4 text-sm text-muted-foreground">No approved answers yet.</p>;
+    return (
+      <p className="mt-4 text-sm text-muted-foreground">
+        {mine ? "Answer awaiting teacher approval." : "No approved answers yet."}
+      </p>
+    );
   }
 
   return (
     <div className="mt-4 space-y-3">
       {answers.map((answer) => {
-        const state = answer.state ?? "APPROVED";
-        if (!mine && state !== "APPROVED") return null;
-
-        if (mine && state !== "APPROVED") {
-          return (
-            <div key={answer.id} className="rounded-lg border border-border bg-background p-4">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <StateBadge state={state} />
-                {state === "DRAFT" && (
-                  <Button type="button" variant="outline" size="sm" disabled={submitting} onClick={onSubmit}>
-                    {submitting ? "Submitting..." : "Submit for Review"}
-                  </Button>
-                )}
-              </div>
-              {state === "PENDING" && <p className="mt-3 text-sm text-muted-foreground">Awaiting teacher review</p>}
-              {state === "REJECTED" && <p className="mt-3 text-sm text-red-300">Rejected by teacher</p>}
-            </div>
-          );
-        }
-
         return (
           <div key={answer.id} className="rounded-r-lg border-l-4 border-accent bg-background p-4 text-sm">
             <p className="text-xs text-indigo-300">AI Assisted · Teacher Approved</p>
-            <p className="mt-2 whitespace-pre-wrap leading-6 text-foreground">{answer.content}</p>
+            <div className="mt-2">
+              <MarkdownContent content={answer.content} />
+            </div>
             <p className="mt-3 text-xs text-muted-foreground">{relativeTime(answer.createdAt)}</p>
           </div>
         );
       })}
     </div>
   );
-}
-
-function StateBadge({ state }: { state: AnswerState }) {
-  const className =
-    state === "DRAFT"
-      ? "bg-slate-700 text-slate-100"
-      : state === "PENDING"
-        ? "bg-warning/20 text-yellow-300"
-        : state === "APPROVED"
-          ? "bg-success/20 text-success"
-          : "bg-error/20 text-red-300";
-  return <Badge className={className}>{state}</Badge>;
 }
 
 function relativeTime(date: string) {
@@ -357,6 +301,8 @@ function relativeTime(date: string) {
 function normalizeDoubt(doubt: Doubt): Doubt {
   return {
     ...doubt,
-    answers: Array.isArray(doubt.answers) ? doubt.answers : [],
+    answers: Array.isArray(doubt.answers)
+      ? doubt.answers.filter((answer) => !("state" in answer) || answer.state === "APPROVED")
+      : [],
   };
 }
