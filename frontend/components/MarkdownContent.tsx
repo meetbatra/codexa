@@ -45,7 +45,7 @@ const components: Components = {
 
 export default function MarkdownContent({ content }: { content: string }) {
   return (
-    <div className="prose-codexa text-sm leading-6 text-foreground">
+    <div className="prose-codexa text-sm leading-6 text-foreground break-words [overflow-wrap:anywhere]">
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath]}
         rehypePlugins={[rehypeKatex]}

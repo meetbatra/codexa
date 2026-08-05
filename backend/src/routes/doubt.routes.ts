@@ -10,7 +10,7 @@ import { sanitizeBody } from "../middleware/sanitize.middleware";
 const router = Router();
 
 router.post("/", authenticateToken, sanitizeBody({ title: 200, content: 2000 }), postDoubt);
-router.get("/", authenticateToken, getDoubts);
+router.get("/", getDoubts);
 router.get("/mine", authenticateToken, getMyDoubts);
 
 export default router;

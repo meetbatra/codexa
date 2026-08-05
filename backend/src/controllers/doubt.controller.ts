@@ -103,10 +103,6 @@ export async function postDoubt(req: Request, res: Response) {
 
 export async function getDoubts(req: Request, res: Response) {
   try {
-    if (!req.user) {
-      return res.status(401).json({ success: false, error: "Unauthorized" } satisfies ApiResponse);
-    }
-
     const doubts = await prisma.doubt.findMany({
       orderBy: { createdAt: "desc" },
       select: {

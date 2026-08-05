@@ -6,14 +6,14 @@ import { AuthProvider } from "../context/AuthContext";
 import { TooltipProvider } from "../components/ui/tooltip";
 
 export const metadata: Metadata = {
-  title: "Codexa",
-  description: "AI-powered learning for better code.",
+  title: "Codexa — AI-powered Code Learning",
+  description: "The hyper-fast environment for modern developers. Instant compilation, real-time AI context, and sub-millisecond grading.",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className="min-h-full bg-[var(--bg)] antialiased">
-      <body className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
+    <html lang="en" className="min-h-full antialiased">
+      <body className="min-h-screen flex flex-col relative bg-[#050505] text-[#e5e2e1]">
         <TooltipProvider>
           <AuthProvider>
             <Navbar />

@@ -1,18 +1,31 @@
 "use client"
 
+import * as React from "react"
 import * as ResizablePrimitive from "react-resizable-panels"
 
 import { cn } from "@/lib/utils"
 
 function ResizablePanelGroup({
   className,
+  direction,
+  orientation,
+  autoSaveId,
+  id,
   ...props
-}: ResizablePrimitive.GroupProps) {
+}: ResizablePrimitive.GroupProps & {
+  direction?: "horizontal" | "vertical"
+  orientation?: "horizontal" | "vertical"
+  autoSaveId?: string
+}) {
+  const groupOrientation = orientation || direction || "horizontal"
   return (
     <ResizablePrimitive.Group
       data-slot="resizable-panel-group"
+      id={id || autoSaveId}
+      orientation={groupOrientation}
       className={cn(
-        "flex h-full w-full aria-[orientation=vertical]:flex-col",
+        "flex h-full w-full min-w-0 min-h-0",
+        groupOrientation === "vertical" ? "flex-col" : "flex-row",
         className
       )}
       {...props}
@@ -20,8 +33,17 @@ function ResizablePanelGroup({
   )
 }
 
-function ResizablePanel({ ...props }: ResizablePrimitive.PanelProps) {
-  return <ResizablePrimitive.Panel data-slot="resizable-panel" {...props} />
+function ResizablePanel({
+  className,
+  ...props
+}: ResizablePrimitive.PanelProps) {
+  return (
+    <ResizablePrimitive.Panel
+      data-slot="resizable-panel"
+      className={cn("min-w-0 min-h-0", className)}
+      {...props}
+    />
+  )
 }
 
 function ResizableHandle({
@@ -35,7 +57,7 @@ function ResizableHandle({
     <ResizablePrimitive.Separator
       data-slot="resizable-handle"
       className={cn(
-        "relative flex w-px items-center justify-center bg-border ring-offset-background after:absolute after:inset-y-0 after:left-1/2 after:w-1 after:-translate-x-1/2 focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-hidden aria-[orientation=horizontal]:h-px aria-[orientation=horizontal]:w-full aria-[orientation=horizontal]:after:left-0 aria-[orientation=horizontal]:after:h-1 aria-[orientation=horizontal]:after:w-full aria-[orientation=horizontal]:after:translate-x-0 aria-[orientation=horizontal]:after:-translate-y-1/2 [&[aria-orientation=horizontal]>div]:rotate-90",
+        "relative flex shrink-0 items-center justify-center bg-border ring-offset-background focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-hidden aria-[orientation=horizontal]:h-px aria-[orientation=horizontal]:w-full aria-[orientation=vertical]:w-px aria-[orientation=vertical]:h-full",
         className
       )}
       {...props}
