@@ -2,12 +2,7 @@
 
 import Link from "next/link";
 import { FormEvent, useState } from "react";
-import { Button } from "../../components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
-import { Input } from "../../components/ui/input";
-import { Label } from "../../components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
-import { Spinner } from "../../components/ui/spinner";
+import { Code2, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { apiFetch } from "../../lib/api";
 
@@ -17,6 +12,7 @@ export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("STUDENT");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -40,82 +36,141 @@ export default function SignupPage() {
   }
 
   return (
-    <main className="flex min-h-[calc(100vh-3.5rem)] items-start justify-center px-6 pt-16">
-      <Card className="w-full max-w-md border-border bg-surface shadow-2xl shadow-black/20">
-        <CardHeader>
-          <CardTitle className="text-3xl tracking-tight text-foreground">Create your account</CardTitle>
-          <CardDescription>Start building stronger coding habits with Codexa.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
-              <Input
+    <main className="relative min-h-screen bg-[#09090b] text-[#fafafa] flex flex-col items-center justify-center pt-32 pb-16 px-4 overflow-hidden">
+      {/* Soft Moving Ambient Background Gradient */}
+      <div className="subtle-moving-bg" />
+
+      <div className="w-full max-w-[400px] mx-auto relative z-10">
+        {/* Card */}
+        <div className="bg-[#121215] border border-[#27272a] rounded-2xl p-7 shadow-xl">
+          {/* Header */}
+          <div className="flex flex-col items-start gap-2 mb-6">
+            <div className="w-9 h-9 rounded-lg bg-[#ea580c]/10 border border-[#ea580c]/20 flex items-center justify-center text-[#ea580c] mb-1">
+              <Code2 className="w-5 h-5" />
+            </div>
+            <h1 className="text-xl font-bold tracking-tight text-[#fafafa]">Create a Codexa account</h1>
+            <p className="text-xs text-[#a1a1aa]">Start accelerating your coding practice with AI.</p>
+          </div>
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-3.5">
+            {/* Account Type Toggle */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-medium text-[#d4d4d8]">
+                Account Type
+              </label>
+              <div className="grid grid-cols-2 gap-1 p-1 bg-[#18181b] border border-[#27272a] rounded-lg">
+                <button
+                  type="button"
+                  onClick={() => setRole("STUDENT")}
+                  className={`py-1.5 px-3 rounded-md text-xs font-medium transition-colors ${
+                    role === "STUDENT"
+                      ? "bg-[#27272a] text-[#fafafa] shadow-sm font-semibold"
+                      : "text-[#71717a] hover:text-[#d4d4d8]"
+                  }`}
+                >
+                  Student
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRole("TEACHER")}
+                  className={`py-1.5 px-3 rounded-md text-xs font-medium transition-colors ${
+                    role === "TEACHER"
+                      ? "bg-[#27272a] text-[#fafafa] shadow-sm font-semibold"
+                      : "text-[#71717a] hover:text-[#d4d4d8]"
+                  }`}
+                >
+                  Educator
+                </button>
+              </div>
+            </div>
+
+            {/* Name */}
+            <div className="space-y-1.5">
+              <label htmlFor="name" className="block text-xs font-medium text-[#d4d4d8]">
+                Full Name
+              </label>
+              <input
                 id="name"
+                type="text"
                 value={name}
-                onChange={(event) => setName(event.target.value)}
+                onChange={(e) => setName(e.target.value)}
                 required
+                placeholder="Alex Rivers"
                 autoComplete="name"
-                className="h-11 bg-background"
+                className="w-full h-9.5 px-3.5 bg-[#18181b] border border-[#27272a] rounded-lg text-sm text-[#fafafa] placeholder-[#52525b] focus:outline-none focus:border-[#ea580c] focus:ring-1 focus:ring-[#ea580c] transition-all"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
+
+            {/* Email */}
+            <div className="space-y-1.5">
+              <label htmlFor="email" className="block text-xs font-medium text-[#d4d4d8]">
+                Work Email
+              </label>
+              <input
                 id="email"
                 type="email"
                 value={email}
-                onChange={(event) => setEmail(event.target.value)}
+                onChange={(e) => setEmail(e.target.value)}
                 required
+                placeholder="name@company.com"
                 autoComplete="email"
-                className="h-11 bg-background"
+                className="w-full h-9.5 px-3.5 bg-[#18181b] border border-[#27272a] rounded-lg text-sm text-[#fafafa] placeholder-[#52525b] focus:outline-none focus:border-[#ea580c] focus:ring-1 focus:ring-[#ea580c] transition-all"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                required
-                autoComplete="new-password"
-                className="h-11 bg-background"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="role">Role</Label>
-              <Select value={role} onValueChange={(value) => setRole(value ?? "STUDENT")}>
-                <SelectTrigger id="role" className="h-11 w-full bg-background">
-                  <SelectValue placeholder="Choose a role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="STUDENT">Student</SelectItem>
-                  <SelectItem value="TEACHER">Teacher</SelectItem>
-                </SelectContent>
-              </Select>
+
+            {/* Password */}
+            <div className="space-y-1.5">
+              <label htmlFor="password" className="block text-xs font-medium text-[#d4d4d8]">
+                Password
+              </label>
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  placeholder="At least 6 characters"
+                  autoComplete="new-password"
+                  className="w-full h-9.5 pl-3.5 pr-9 bg-[#18181b] border border-[#27272a] rounded-lg text-sm text-[#fafafa] placeholder-[#52525b] focus:outline-none focus:border-[#ea580c] focus:ring-1 focus:ring-[#ea580c] transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#71717a] hover:text-[#fafafa] transition-colors"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
 
             {error && (
-              <p className="rounded-lg border border-error/40 bg-error/10 px-4 py-3 text-sm text-red-300">
+              <div className="p-3 rounded-lg border border-red-500/30 bg-red-500/10 text-xs text-red-400">
                 {error}
-              </p>
+              </div>
             )}
 
-            <Button type="submit" disabled={submitting} className="h-11 w-full">
-              {submitting && <Spinner className="mr-2" />}
+            <button
+              type="submit"
+              disabled={submitting}
+              className="w-full h-10 bg-[#ea580c] hover:bg-[#c2410c] text-white font-medium text-sm rounded-lg shadow-sm transition-colors flex items-center justify-center disabled:opacity-50 mt-1"
+            >
               {submitting ? "Creating account..." : "Create account"}
-            </Button>
+            </button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-muted-foreground">
-            Already have an account?{" "}
-            <Link href="/login" className="font-semibold text-indigo-300 hover:text-foreground">
-              Login
-            </Link>
-          </p>
-        </CardContent>
-      </Card>
+          {/* Footer */}
+          <div className="mt-6 pt-5 border-t border-[#27272a]/60 text-center">
+            <p className="text-xs text-[#a1a1aa]">
+              Already have an account?{" "}
+              <Link href="/login" className="text-[#ea580c] hover:underline font-medium ml-1">
+                Sign in
+              </Link>
+            </p>
+          </div>
+        </div>
+      </div>
     </main>
   );
 }

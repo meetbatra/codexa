@@ -107,26 +107,74 @@ function resultError(result: any) {
   return statusDescription || "Execution failed";
 }
 
+import {
+  getCppWrapper,
+  getJavaWrapper,
+  getPythonWrapper,
+  getJavascriptWrapper
+} from "./wrappers";
+
+export function wrapCode(code: string, language: string, title?: string): string {
+  if (language === "javascript") {
+    return getJavascriptWrapper(code);
+  }
+  
+  if (language === "python") {
+    return getPythonWrapper(code);
+  }
+  
+  if (language === "cpp" && title) {
+    return getCppWrapper(code, title);
+  }
+
+  if (language === "java" && title) {
+    return getJavaWrapper(code, title);
+  }
+  
+  return code;
+}
+
+function normalizeOutput(str: string): string {
+  const trimmed = str.trim();
+  try {
+    const parsed = JSON.parse(trimmed);
+    if (Array.isArray(parsed) && parsed.length > 0 && Array.isArray(parsed[0])) {
+      const sortedInner = parsed.map((arr: any) =>
+        Array.isArray(arr) ? [...arr].sort((a, b) => String(a).localeCompare(String(b))) : arr
+      );
+      sortedInner.sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)));
+      return JSON.stringify(sortedInner);
+    }
+    return JSON.stringify(parsed);
+  } catch (e) {
+    return trimmed;
+  }
+}
+
 export async function runTestCases(
   code: string,
   language: string,
-  testCases: TestCase[]
+  testCases: TestCase[],
+  title?: string
 ): Promise<TestCaseResult[]> {
   const languageId = languageMap[language as keyof typeof languageMap];
   if (!languageId) {
     throw new Error(`Unsupported language: ${language}`);
   }
 
+  const wrappedCode = wrapCode(code, language, title);
+
   return Promise.all(
     testCases.map(async (testCase) => {
       try {
-        const token = await createSubmission(code, languageId, testCase.input);
+        const token = await createSubmission(wrappedCode, languageId, testCase.input);
         const result = await waitForResult(token);
         const actualOutput = decode(result?.stdout);
         const statusDescription = result?.status?.description;
         const passed =
           statusDescription === "Accepted" &&
-          actualOutput.trim() === testCase.expectedOutput.trim();
+          (actualOutput.trim() === testCase.expectedOutput.trim() ||
+           normalizeOutput(actualOutput) === normalizeOutput(testCase.expectedOutput));
         const error =
           !passed && statusDescription === "Accepted"
             ? "Wrong Answer"

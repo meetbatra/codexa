@@ -2,11 +2,7 @@
 
 import Link from "next/link";
 import { FormEvent, useState } from "react";
-import { Button } from "../../components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
-import { Input } from "../../components/ui/input";
-import { Label } from "../../components/ui/label";
-import { Spinner } from "../../components/ui/spinner";
+import { Code2, Eye, EyeOff, Lock, Mail } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { apiFetch } from "../../lib/api";
 
@@ -14,6 +10,7 @@ export default function LoginPage() {
   const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -37,59 +34,93 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-[calc(100vh-3.5rem)] items-start justify-center px-6 pt-24">
-      <Card className="w-full max-w-md border-border bg-surface shadow-2xl shadow-black/20">
-        <CardHeader>
-          <CardTitle className="text-3xl tracking-tight text-foreground">Welcome back</CardTitle>
-          <CardDescription>Sign in to continue learning with Codexa.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                required
-                autoComplete="email"
-                className="h-11 bg-background"
-              />
+    <main className="relative min-h-screen bg-[#09090b] text-[#fafafa] flex flex-col items-center justify-center pt-32 pb-16 px-4 overflow-hidden">
+      {/* Soft Moving Ambient Background Gradient */}
+      <div className="subtle-moving-bg" />
+
+      <div className="w-full max-w-[400px] mx-auto relative z-10">
+        {/* Card */}
+        <div className="bg-[#121215] border border-[#27272a] rounded-2xl p-7 shadow-xl">
+          {/* Header */}
+          <div className="flex flex-col items-start gap-2 mb-6">
+            <div className="w-9 h-9 rounded-lg bg-[#ea580c]/10 border border-[#ea580c]/20 flex items-center justify-center text-[#ea580c] mb-1">
+              <Code2 className="w-5 h-5" />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                required
-                autoComplete="current-password"
-                className="h-11 bg-background"
-              />
+            <h1 className="text-xl font-bold tracking-tight text-[#fafafa]">Sign in to Codexa</h1>
+            <p className="text-xs text-[#a1a1aa]">Welcome back! Enter your credentials to continue.</p>
+          </div>
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-1.5">
+              <label htmlFor="email" className="block text-xs font-medium text-[#d4d4d8]">
+                Email address
+              </label>
+              <div className="relative">
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  placeholder="name@company.com"
+                  autoComplete="email"
+                  className="w-full h-9.5 px-3.5 bg-[#18181b] border border-[#27272a] rounded-lg text-sm text-[#fafafa] placeholder-[#52525b] focus:outline-none focus:border-[#ea580c] focus:ring-1 focus:ring-[#ea580c] transition-all"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label htmlFor="password" className="block text-xs font-medium text-[#d4d4d8]">
+                Password
+              </label>
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  placeholder="••••••••"
+                  autoComplete="current-password"
+                  className="w-full h-9.5 pl-3.5 pr-9 bg-[#18181b] border border-[#27272a] rounded-lg text-sm text-[#fafafa] placeholder-[#52525b] focus:outline-none focus:border-[#ea580c] focus:ring-1 focus:ring-[#ea580c] transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#71717a] hover:text-[#fafafa] transition-colors"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
 
             {error && (
-              <p className="rounded-lg border border-error/40 bg-error/10 px-4 py-3 text-sm text-red-300">
+              <div className="p-3 rounded-lg border border-red-500/30 bg-red-500/10 text-xs text-red-400">
                 {error}
-              </p>
+              </div>
             )}
 
-            <Button type="submit" disabled={submitting} className="h-11 w-full">
-              {submitting && <Spinner className="mr-2" />}
+            <button
+              type="submit"
+              disabled={submitting}
+              className="w-full h-10 bg-[#ea580c] hover:bg-[#c2410c] text-white font-medium text-sm rounded-lg shadow-sm transition-colors flex items-center justify-center disabled:opacity-50 mt-1"
+            >
               {submitting ? "Signing in..." : "Sign in"}
-            </Button>
+            </button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-muted-foreground">
-            Don&apos;t have an account?{" "}
-            <Link href="/signup" className="font-semibold text-indigo-300 hover:text-foreground">
-              Sign up
-            </Link>
-          </p>
-        </CardContent>
-      </Card>
+          {/* Footer */}
+          <div className="mt-6 pt-5 border-t border-[#27272a]/60 text-center">
+            <p className="text-xs text-[#a1a1aa]">
+              Don&apos;t have an account?{" "}
+              <Link href="/signup" className="text-[#ea580c] hover:underline font-medium ml-1">
+                Create an account
+              </Link>
+            </p>
+          </div>
+        </div>
+      </div>
     </main>
   );
 }

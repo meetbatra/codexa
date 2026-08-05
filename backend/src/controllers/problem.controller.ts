@@ -11,6 +11,7 @@ const testCaseSchema = z.object({
 const createProblemSchema = z.object({
   title: z.string().trim().min(1, "Title is required"),
   description: z.string().trim().min(1, "Description is required"),
+  difficulty: z.enum(["Easy", "Medium", "Hard"]).optional().default("Medium"),
   testCases: z.array(testCaseSchema).min(1, "At least one test case is required"),
 });
 
@@ -28,6 +29,7 @@ export async function createProblem(req: Request, res: Response) {
       data: {
         title: parsed.data.title,
         description: parsed.data.description,
+        difficulty: parsed.data.difficulty,
         testCases: parsed.data.testCases,
       },
     });
@@ -44,8 +46,8 @@ export async function createProblem(req: Request, res: Response) {
 export async function getProblems(_req: Request, res: Response) {
   try {
     const problems = await prisma.problem.findMany({
-      select: { id: true, title: true, description: true, createdAt: true },
-      orderBy: { createdAt: "desc" },
+      select: { id: true, title: true, description: true, difficulty: true, createdAt: true },
+      orderBy: { createdAt: "asc" },
     });
 
     return res.status(200).json({ success: true, data: problems } satisfies ApiResponse);
@@ -62,7 +64,7 @@ export async function getProblemById(req: Request, res: Response) {
     const problemId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
     const problem = await prisma.problem.findUnique({
       where: { id: problemId },
-      select: { id: true, title: true, description: true, createdAt: true, testCases: true },
+      select: { id: true, title: true, description: true, difficulty: true, createdAt: true, testCases: true },
     });
 
     if (!problem) {
@@ -75,6 +77,7 @@ export async function getProblemById(req: Request, res: Response) {
         id: problem.id,
         title: problem.title,
         description: problem.description,
+        difficulty: problem.difficulty,
         createdAt: problem.createdAt,
         testCases: problem.testCases,
       },

@@ -8,7 +8,7 @@ import { cpp } from "@codemirror/lang-cpp";
 import { java } from "@codemirror/lang-java";
 import { javascript } from "@codemirror/lang-javascript";
 import { python } from "@codemirror/lang-python";
-import { oneDark } from "@codemirror/theme-one-dark";
+import { vscodeDarkInit } from "@uiw/codemirror-theme-vscode";
 
 type CodeEditorProps = {
   value: string;
@@ -50,10 +50,19 @@ function CodeEditorInner({ value, onChange, language }: CodeEditorProps) {
       doc: valueRef.current,
       extensions: [
         basicSetup,
-        oneDark,
+        vscodeDarkInit({
+          settings: {
+            background: "#0c0c10", // slightly brighter than the #050508 background
+            gutterBackground: "#0c0c10",
+            lineHighlight: "rgba(255, 255, 255, 0.03)",
+            selection: "rgba(251, 146, 60, 0.2)",
+            caret: "#fb923c", // orange cursor
+          }
+        }),
         EditorView.theme({
           "&": { height: "100%" },
           ".cm-scroller": { overflow: "auto" },
+          ".cm-gutters": { borderRight: "1px solid rgba(255, 255, 255, 0.05)" }
         }),
         languageExtension(language),
         EditorView.updateListener.of((update) => {
@@ -72,7 +81,7 @@ function CodeEditorInner({ value, onChange, language }: CodeEditorProps) {
   return (
     <div
       ref={editorParent}
-      className="h-full min-h-0 overflow-hidden rounded-lg border border-border font-mono text-sm"
+      className="h-full min-h-0 overflow-hidden font-mono text-sm"
     />
   );
 }

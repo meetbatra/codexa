@@ -70,7 +70,7 @@ export async function submit(req: Request, res: Response) {
       },
     });
 
-    const testResults = await runTestCases(parsed.data.code, parsed.data.language, testCases.data);
+    const testResults = await runTestCases(parsed.data.code, parsed.data.language, testCases.data, problem.title);
     const status = getSubmissionStatus(testResults);
     const updatedSubmission = await prisma.submission.update({
       where: { id: submission.id },
@@ -104,6 +104,48 @@ export async function submit(req: Request, res: Response) {
     return res.status(500).json({
       success: false,
       error: error instanceof Error ? error.message : "Failed to execute submission",
+    } satisfies ApiResponse);
+  }
+}
+
+export async function runCode(req: Request, res: Response) {
+  try {
+    if (!req.user || req.user.role !== Role.STUDENT) {
+      return res.status(403).json({ success: false, error: "Only students can run code" } satisfies ApiResponse);
+    }
+
+    const parsed = submitSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({
+        success: false,
+        error: parsed.error.issues.map((issue) => issue.message).join(", "),
+      } satisfies ApiResponse);
+    }
+
+    const problem = await prisma.problem.findUnique({ where: { id: parsed.data.problemId } });
+    if (!problem) {
+      return res.status(404).json({ success: false, error: "Problem not found" } satisfies ApiResponse);
+    }
+
+    const testCases = z.array(testCaseSchema).safeParse(problem.testCases);
+    if (!testCases.success) {
+      return res.status(500).json({ success: false, error: "Problem test cases are invalid" } satisfies ApiResponse);
+    }
+
+    const testResults = await runTestCases(parsed.data.code, parsed.data.language, testCases.data, problem.title);
+    const status = getSubmissionStatus(testResults);
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        status,
+        testResults,
+      },
+    } satisfies ApiResponse);
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to run code",
     } satisfies ApiResponse);
   }
 }
