@@ -107,31 +107,10 @@ function resultError(result: any) {
   return statusDescription || "Execution failed";
 }
 
-import {
-  getCppWrapper,
-  getJavaWrapper,
-  getPythonWrapper,
-  getJavascriptWrapper
-} from "./wrappers";
-
-export function wrapCode(code: string, language: string, title?: string): string {
-  if (language === "javascript") {
-    return getJavascriptWrapper(code);
-  }
-  
-  if (language === "python") {
-    return getPythonWrapper(code);
-  }
-  
-  if (language === "cpp" && title) {
-    return getCppWrapper(code, title);
-  }
-
-  if (language === "java" && title) {
-    return getJavaWrapper(code, title);
-  }
-  
-  return code;
+export function wrapCode(userCode: string, wrapperCode: string): string {
+  // Replace the {USER_CODE} placeholder in the DB wrapper with the actual user submission.
+  // This completely eliminates regex parsing errors.
+  return wrapperCode.replace("{USER_CODE}", userCode);
 }
 
 function normalizeOutput(str: string): string {
@@ -155,14 +134,12 @@ export async function runTestCases(
   code: string,
   language: string,
   testCases: TestCase[],
-  title?: string
+  wrapperCode: string
 ): Promise<TestCaseResult[]> {
   const languageId = languageMap[language as keyof typeof languageMap];
-  if (!languageId) {
-    throw new Error(`Unsupported language: ${language}`);
-  }
+  if (!languageId) throw new Error(`Unsupported language: ${language}`);
 
-  const wrappedCode = wrapCode(code, language, title);
+  const wrappedCode = wrapCode(code, wrapperCode);
 
   return Promise.all(
     testCases.map(async (testCase) => {
@@ -179,7 +156,6 @@ export async function runTestCases(
           !passed && statusDescription === "Accepted"
             ? "Wrong Answer"
             : resultError(result);
-
         return {
           passed,
           input: testCase.input,

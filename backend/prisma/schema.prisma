@@ -40,13 +40,14 @@ model User {
 }
 
 model Problem {
-  id          String       @id @default(uuid())
-  title       String
-  description String
-  difficulty  String       @default("Medium")
-  testCases   Json
-  createdAt   DateTime     @default(now())
-  submissions Submission[]
+  id              String                  @id @default(uuid())
+  title           String
+  description     String
+  difficulty      String                  @default("Medium")
+  testCases       Json
+  createdAt       DateTime                @default(now())
+  submissions     Submission[]
+  languageConfigs ProblemLanguageConfig[]
 }
 
 model Submission {
@@ -83,4 +84,16 @@ model DoubtAnswer {
   createdAt       DateTime    @default(now())
   doubt           Doubt       @relation(fields: [doubtId], references: [id])
   reviewedBy      User?       @relation("ReviewedBy", fields: [reviewedById], references: [id])
+}
+
+model ProblemLanguageConfig {
+  id          String  @id @default(uuid())
+  problemId   String
+  language    String
+  starterCode String
+  wrapperCode String
+
+  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@unique([problemId, language])
 }
