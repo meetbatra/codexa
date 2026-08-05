@@ -106,14 +106,9 @@ codexa/
 │       │   └── auth.middleware.ts # JWT verification & role authorization
 │       └── lib/                   # Utility libraries & services
 │           ├── judge0.ts          # Judge0 API client & test case runner
-│           ├── prisma.ts          # Prisma Client instance manager
-│           ├── wrapperGenerator.ts# Wrapper dispatch helper
-│           └── wrappers/          # Language execution wrapper generators
-│               ├── index.ts       # Central wrapper registry
-│               ├── cpp.ts         # C++ standard I/O & class instantiation harness
-│               ├── java.ts        # Java Main class & JSON parsing harness
-│               ├── javascript.ts  # Node.js stdin parsing harness
-│               └── python.ts      # Python sys.stdin & json serialization harness
+│           └── prisma.ts          # Prisma Client instance manager
+│       └── scripts/               # Database seed scripts
+│           └── seedLanguageConfigs.ts # Generates and seeds DB with starter/wrapper code
 └── frontend/                      # Next.js 16 Web Application
     ├── package.json               # Frontend dependencies & scripts
     ├── next.config.ts             # Next.js configuration
@@ -136,13 +131,8 @@ codexa/
     │   └── AuthContext.tsx        # Authentication & user state management
     └── lib/                       # Frontend utilities & configuration
         ├── api.ts                 # Axios API client configured with auth headers
-        ├── auth.ts                # Token & localStorage management utilities
-        └── templates/             # Multi-language starter code templates
-            ├── index.ts           # Central template exporter
-            ├── cpp.ts             # C++ starter code per problem
-            ├── java.ts            # Java starter code per problem
-            ├── javascript.ts      # JavaScript starter code per problem
-            └── python.ts          # Python starter code per problem
+        ├── api.ts                 # Axios API client configured with auth headers
+        └── auth.ts                # Token & localStorage management utilities
 ```
 
 ---
@@ -160,8 +150,8 @@ codexa/
        ▼
 [Express Backend Controller]
        │
-       │  3. Formats Code via backend/src/lib/wrappers/
-       │     Injects problem-specific stdin parser & harness
+       │  3. Fetches ProblemLanguageConfig from Database
+       │     Injects problem-specific stdin parser & execution wrapper
        ▼
 [Judge0 CE Engine (RapidAPI)]
        │
@@ -230,13 +220,25 @@ model User {
 }
 
 model Problem {
-  id          String       @id @default(uuid())
-  title       String
-  description String
-  difficulty  String       @default("Medium")
-  testCases   Json
-  createdAt   DateTime     @default(now())
-  submissions Submission[]
+  id              String                  @id @default(uuid())
+  title           String
+  description     String
+  difficulty      String                  @default("Medium")
+  testCases       Json
+  createdAt       DateTime                @default(now())
+  submissions     Submission[]
+  languageConfigs ProblemLanguageConfig[]
+}
+
+model ProblemLanguageConfig {
+  id          String   @id @default(uuid())
+  problemId   String
+  language    String
+  starterCode String
+  wrapperCode String
+  problem     Problem  @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@unique([problemId, language])
 }
 
 model Submission {
@@ -284,21 +286,21 @@ model DoubtAnswer {
 
 Codexa translates high-level user code into executable submissions using standard language identifiers on Judge0:
 
-| Language | Judge0 Language ID | Execution Command / Environment | Starter Template Location | Execution Wrapper Location |
-| :--- | :--- | :--- | :--- | :--- |
-| **Python** | `71` | Python 3.8.1 | `frontend/lib/templates/python.ts` | `backend/src/lib/wrappers/python.ts` |
-| **JavaScript** | `63` | Node.js 12.14.0 | `frontend/lib/templates/javascript.ts` | `backend/src/lib/wrappers/javascript.ts` |
-| **C++** | `54` | GCC 9.2.0 | `frontend/lib/templates/cpp.ts` | `backend/src/lib/wrappers/cpp.ts` |
-| **Java** | `62` | OpenJDK 13.0.1 | `frontend/lib/templates/java.ts` | `backend/src/lib/wrappers/java.ts` |
+| Language | Judge0 Language ID | Execution Command / Environment |
+| :--- | :--- | :--- |
+| **Python** | `71` | Python 3.8.1 |
+| **JavaScript** | `63` | Node.js 12.14.0 |
+| **C++** | `54` | GCC 9.2.0 |
+| **Java** | `62` | OpenJDK 13.0.1 |
 
 ---
 
-### Template & Wrapper Architecture
+### Database-Driven Template & Wrapper Architecture
 
-To make the platform extensible for any new LeetCode problem without modifying core judge logic:
+To make the platform extensible for any new LeetCode problem without modifying core judge logic, the starter codes and execution wrappers are entirely database-driven.
 
-1. **Frontend Templates (`frontend/lib/templates/`)**: Provide clean starter function signatures matching LeetCode conventions for each language (e.g. `def solve(nums, target):` or `function solve(strs)`).
-2. **Backend Wrappers (`backend/src/lib/wrappers/`)**: Automate reading raw test case `stdin`, parsing input arguments, executing the target user solution, and serializing the return result to `stdout` in JSON format.
+1. **Starter Code (`starterCode`)**: Provides clean function signatures matching LeetCode conventions for each language (e.g. `def solve(nums, target):` or `function solve(strs)`) with specific problem instructions. This is queried from the `ProblemLanguageConfig` table and rendered on the frontend.
+2. **Execution Wrappers (`wrapperCode`)**: Automate reading raw test case `stdin`, parsing input arguments into native data types, executing the target user solution, and serializing the return result to `stdout` in JSON format. This wrapper wraps the user code at runtime before sending to Judge0.
 
 #### Example Pipeline for Group Anagrams (Python)
 - User Code:
@@ -477,10 +479,10 @@ npx prisma generate
 npx prisma db push
 ```
 
-*(Optional)* Seed the database with default problems and test cases:
+*(Optional)* Seed the database with default problems and language execution configurations:
 
 ```bash
-npx ts-node src/utils/seed.ts
+npx ts-node --project tsconfig.json src/scripts/seedLanguageConfigs.ts
 ```
 
 ---

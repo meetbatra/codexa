@@ -89,3 +89,20 @@ export async function getProblemById(req: Request, res: Response) {
     } satisfies ApiResponse);
   }
 }
+
+export async function getStarterCode(req: Request, res: Response) {
+  try {
+    const problemId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const language = typeof req.query.language === "string" ? req.query.language : "python";
+    const config = await prisma.problemLanguageConfig.findUnique({
+      where: { problemId_language: { problemId, language } },
+      select: { starterCode: true },
+    });
+    if (!config) {
+      return res.status(404).json({ success: false, error: "No starter code for this language" } satisfies ApiResponse);
+    }
+    return res.status(200).json({ success: true, data: { starterCode: config.starterCode } } satisfies ApiResponse);
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error instanceof Error ? error.message : "Failed to get starter code" } satisfies ApiResponse);
+  }
+}

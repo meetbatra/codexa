@@ -60,6 +60,14 @@ export async function submit(req: Request, res: Response) {
       return res.status(500).json({ success: false, error: "Problem test cases are invalid" } satisfies ApiResponse);
     }
 
+    const langConfig = await prisma.problemLanguageConfig.findUnique({
+      where: { problemId_language: { problemId: problem.id, language: parsed.data.language } },
+      select: { wrapperCode: true },
+    });
+    if (!langConfig) {
+      return res.status(400).json({ success: false, error: `No execution config for language: ${parsed.data.language}` } satisfies ApiResponse);
+    }
+
     const submission = await prisma.submission.create({
       data: {
         userId: req.user.id,
@@ -70,7 +78,7 @@ export async function submit(req: Request, res: Response) {
       },
     });
 
-    const testResults = await runTestCases(parsed.data.code, parsed.data.language, testCases.data, problem.title);
+    const testResults = await runTestCases(parsed.data.code, parsed.data.language, testCases.data, langConfig.wrapperCode);
     const status = getSubmissionStatus(testResults);
     const updatedSubmission = await prisma.submission.update({
       where: { id: submission.id },
@@ -132,7 +140,15 @@ export async function runCode(req: Request, res: Response) {
       return res.status(500).json({ success: false, error: "Problem test cases are invalid" } satisfies ApiResponse);
     }
 
-    const testResults = await runTestCases(parsed.data.code, parsed.data.language, testCases.data, problem.title);
+    const langConfig = await prisma.problemLanguageConfig.findUnique({
+      where: { problemId_language: { problemId: problem.id, language: parsed.data.language } },
+      select: { wrapperCode: true },
+    });
+    if (!langConfig) {
+      return res.status(400).json({ success: false, error: `No execution config for language: ${parsed.data.language}` } satisfies ApiResponse);
+    }
+
+    const testResults = await runTestCases(parsed.data.code, parsed.data.language, testCases.data, langConfig.wrapperCode);
     const status = getSubmissionStatus(testResults);
 
     return res.status(200).json({

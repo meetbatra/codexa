@@ -57,7 +57,19 @@ const languages = [
   { value: "java", label: "Java (OpenJDK 17)" },
 ];
 
-import { getDefaultCode } from "../../../lib/templates";
+
+async function fetchStarterCode(problemId: string, language: string): Promise<string> {
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/problems/${problemId}/starter-code?language=${language}`,
+      { cache: "no-store" }
+    );
+    const json = await res.json() as { data?: { starterCode: string } };
+    return json.data?.starterCode ?? `# Write your ${language} solution here\n`;
+  } catch {
+    return `# Write your ${language} solution here\n`;
+  }
+}
 
 type TestCase = { input: string; expectedOutput: string };
 
@@ -113,7 +125,7 @@ function ProblemDetailContent() {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [currentSubmission, setCurrentSubmission] = useState<Submission | null>(null);
   const [language, setLanguage] = useState("python");
-  const [code, setCode] = useState(getDefaultCode("python"));
+  const [code, setCode] = useState("# Loading...");
 
   // Tabs
   const [leftTab, setLeftTab] = useState<LeftTab>("description");
@@ -166,7 +178,8 @@ function ProblemDetailContent() {
         ]);
         if (active) {
           setProblem(problemResponse.data);
-          setCode(getDefaultCode(language, problemResponse.data.title));
+          const starter = await fetchStarterCode(problemId, language);
+          setCode(starter);
           setSubmissions(submissionsResponse.data ?? []);
           if (problemResponse.data.testCases?.length > 0) {
             setCustomInput(problemResponse.data.testCases[0].input);
@@ -224,13 +237,18 @@ function ProblemDetailContent() {
     [problemId, submissions]
   );
 
-  function handleLanguageChange(nextLanguage: string) {
+  async function handleLanguageChange(nextLanguage: string) {
     setLanguage(nextLanguage);
-    setCode(getDefaultCode(nextLanguage, problem?.title));
+    if (problem) {
+      const starter = await fetchStarterCode(problem.id, nextLanguage);
+      setCode(starter);
+    }
   }
 
   function handleResetCode() {
-    setCode(getDefaultCode(language, problem?.title));
+    if (problem) {
+      void fetchStarterCode(problem.id, language).then(setCode);
+    }
   }
 
   function handleCopyCode() {
