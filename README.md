@@ -1,6 +1,6 @@
 # Codexa 🚀
 
-Codexa is a full-stack, AI-powered online coding judge and Learning Management System (LMS) platform. It provides a LeetCode-style code execution workspace, automated test case evaluation across multiple programming languages, AI-assisted feedback generation, and an integrated student-teacher Doubt Resolution ecosystem featuring real-time filters and smooth GPU-accelerated UI transitions.
+Codexa is a full-stack, AI-powered online coding judge and Learning Management System (LMS) platform. It provides a code execution workspace, automated test case evaluation across multiple programming languages, AI-assisted feedback generation, and an integrated student-teacher Doubt Resolution ecosystem featuring real-time filters and smooth GPU-accelerated UI transitions.
 
 ---
 
@@ -40,7 +40,7 @@ Codexa is a full-stack, AI-powered online coding judge and Learning Management S
 ## Key Features
 
 - ⚡ **Multi-Language Code Execution Workspace**: Interactive CodeMirror 6 code editor supporting Python, JavaScript, C++, and Java with custom syntax highlighting and language-specific starter boilerplate.
-- 🎯 **LeetCode-Style Test Case Evaluation**: Remote compilation and execution powered by Judge0 CE API, running user submissions against stored test cases.
+- 🎯 **Test Case Evaluation**: Remote compilation and execution powered by Judge0 CE API, running user submissions against stored test cases.
 - 🧠 **AI-Powered Code Feedback**: Integrated OpenAI / Gemini AI model via Vercel AI SDK to analyze failed test cases and generate step-by-step debugging hints.
 - 💬 **Student Doubt Board**: Interactive forum where students post question-specific doubts, view answers, filter by status (`All`, `Answered`, `Unanswered`, `My Doubts`), and search titles/descriptions in real-time.
 - ✨ **GPU-Accelerated Accordion Animations**: Smooth 700ms `grid-template-rows` CSS animations for expanding and collapsing doubt card details and answers without layout thrashing.
@@ -297,9 +297,9 @@ Codexa translates high-level user code into executable submissions using standar
 
 ### Database-Driven Template & Wrapper Architecture
 
-To make the platform extensible for any new LeetCode problem without modifying core judge logic, the starter codes and execution wrappers are entirely database-driven.
+To make the platform extensible for any new problem without modifying core judge logic, the starter codes and execution wrappers are entirely database-driven.
 
-1. **Starter Code (`starterCode`)**: Provides clean function signatures matching LeetCode conventions for each language (e.g. `def solve(nums, target):` or `function solve(strs)`) with specific problem instructions. This is queried from the `ProblemLanguageConfig` table and rendered on the frontend.
+1. **Starter Code (`starterCode`)**: Provides clean function signatures matching conventions for each language (e.g. `def solve(nums, target):` or `function solve(strs)`) with specific problem instructions. This is queried from the `ProblemLanguageConfig` table and rendered on the frontend.
 2. **Execution Wrappers (`wrapperCode`)**: Automate reading raw test case `stdin`, parsing input arguments into native data types, executing the target user solution, and serializing the return result to `stdout` in JSON format. This wrapper wraps the user code at runtime before sending to Judge0.
 
 #### Example Pipeline for Group Anagrams (Python)
