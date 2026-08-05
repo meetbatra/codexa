@@ -6,8 +6,12 @@
   "scripts": {
     "dev": "nodemon",
     "build": "tsc",
+    "heroku-postbuild": "prisma generate && npm run build",
     "start": "node dist/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "engines": {
+    "node": "22.x"
   },
   "keywords": [],
   "author": "",
